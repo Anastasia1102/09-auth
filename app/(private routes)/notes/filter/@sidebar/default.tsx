@@ -1,4 +1,4 @@
-import { fetchTagList } from "@/lib/api"
+import { fetchTagList } from "@/lib/api/clientApi"
 import css from "./SidebarNotes.module.css"
 import Link from "next/link";
 import { NoteTag } from "@/types/note";

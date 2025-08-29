@@ -3,7 +3,7 @@
 import { useState } from "react";
 import css from "./NoteForm.module.css";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createNote } from "../../lib/api";
+import { createNote } from "../../lib/api/clientApi";
 import type { Note } from "../../types/note";
 import { useNoteDraft, initialDraft, type DraftType} from "@/lib/store/noteStore"; 
 

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { fetchTagList } from "@/lib/api";
+import { fetchTagList } from "@/lib/api/clientApi";
 import type { NoteTag } from "@/types/note";
 import Link from "next/link";
 

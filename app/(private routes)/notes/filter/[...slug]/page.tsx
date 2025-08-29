@@ -1,7 +1,8 @@
 import NotesClient from "./Notes.client";
 import type { Metadata } from "next";
-import { fetchNotes,type FetchNotesResp } from "@/lib/api";
+import { fetchNotes,type FetchNotesResp } from "@/lib/api/clientApi";
 import { NoteTag } from "@/types/note";
+import { cookies } from 'next/headers';
 
 
 type PageProps = {
@@ -47,12 +48,16 @@ export default async function NotesPage({ params }: PageProps) {
     selectedTag = raw as AllowedTag;
   }
 
+  const cookieHeader = (await cookies()).toString();
+
   const initialData: FetchNotesResp = await fetchNotes({
     page: initialPage,
     perPage: 12,
     search: initialSearch,
     tag: selectedTag,
-  });
+  },
+    { headers: { Cookie: cookieHeader } }
+  );
 
 
   return (

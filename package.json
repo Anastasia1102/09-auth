@@ -1,17 +1,18 @@
 {
-  "name": "06-notehub-nextjs",
+  "name": "09-auth",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.85.2",
     "@tanstack/react-query-devtools": "^5.85.2",
     "axios": "^1.11.0",
+    "cookie": "^1.0.2",
     "formik": "^2.4.6",
     "next": "15.4.6",
     "react": "19.1.0",
@@ -23,7 +24,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@types/node": "^20",
+    "@types/node": "^20.19.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

@@ -2,7 +2,7 @@
 
 import { useState} from "react";
 import { keepPreviousData, useQuery} from "@tanstack/react-query";
-import { fetchNotes, type FetchNotesResp } from "@/lib/api";
+import { fetchNotes, type FetchNotesResp } from "@/lib/api/clientApi";
 import { useDebounce } from "use-debounce";
 import { NoteTag } from "@/types/note";
 
