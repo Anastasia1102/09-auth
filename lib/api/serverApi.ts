@@ -34,6 +34,10 @@ export const fetchNoteById = async (noteId: string): Promise<Note> => {
   return res.data;
 }
 
+export const fetchTagList = async (): Promise<NoteTag[]> => {
+  return ["Work","Personal","Meeting","Shopping","Ideas","Travel","Finance","Health","Important","Todo"];
+};
+
 export const checkServerSession = async (cookieHeader?: string) => {
   const cookiesData =  cookieHeader ?? (await cookies()).toString();
   return  nextServer.get<CheckSessionResponse>(`/auth/session`, {
