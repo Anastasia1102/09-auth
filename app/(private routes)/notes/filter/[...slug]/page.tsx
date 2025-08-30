@@ -1,6 +1,6 @@
 import NotesClient from "./Notes.client";
 import type { Metadata } from "next";
-import { fetchNotes,type FetchNotesResp } from "@/lib/api/clientApi";
+import { fetchNotes,type FetchNotesResp } from "@/lib/api/serverApi";
 import { NoteTag } from "@/types/note";
 import { cookies } from 'next/headers';
 

@@ -6,14 +6,18 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import type { User } from '@/types/user';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMe, updateProfile } from '@/lib/api/clientApi'; 
 import Loader from '@/app/loading';
+import { useAuthStore } from '@/lib/store/authStore';
 
 const baseUserName = (value: string) => (value?.includes('@') ? value.split('@')[0] : value);
 
 export default function EditProfilePage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const setUserInStore = useAuthStore((s) => s.setUser);
 
   const { data: user, isLoading, isError } = useQuery<User>({
     queryKey: ['me'],
@@ -30,7 +34,9 @@ export default function EditProfilePage() {
  
   const { mutateAsync, isPending } = useMutation({
     mutationFn: (payload: {username: string;}) => updateProfile(payload),
-    onSuccess: () => {
+    onSuccess: (updatedUser) => {
+      setUserInStore(updatedUser);
+      queryClient.setQueryData(['me'], updatedUser);
       router.push('/profile');
     },
   });
@@ -53,7 +59,7 @@ export default function EditProfilePage() {
     return <main className={css.mainContent}><p>Failed to load profile.</p></main>;
   }
 
-  const avatarSrc = '/avatar-min.png';
+  // const avatarSrc = '/avatar-min.png';
 
   return (
     <main className={css.mainContent}>
@@ -62,7 +68,7 @@ export default function EditProfilePage() {
 
         <Image
           priority={true}
-          src={avatarSrc}
+          src={user.avatar}
           alt="User Avatar"
           width={120}
           height={120}

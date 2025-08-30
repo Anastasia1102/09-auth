@@ -1,63 +1,66 @@
-import { parse } from 'cookie'
-import { NextRequest, NextResponse } from 'next/server'
-import { checkServerSession } from './lib/api/serverApi'
+import { NextRequest, NextResponse } from "next/server";
+import { checkServerSession } from "./lib/api/serverApi";
+import { cookies } from "next/headers";
 
-const privateRoutes = ["/profile","/notes"]
-const publicRoutes = ["/sign-in", "/sign-up"]
+const privateRoutes = ["/profile", "/notes"];
+const publicRoutes = ["/sign-in", "/sign-up"];
 
 export async function middleware(request: NextRequest) {
-  const accessToken = request.cookies.get('accessToken')?.value;
-  const refreshToken = request.cookies.get('accessToken')?.value;
+  const { pathname } = new URL(request.url);
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("accessToken")?.value;
+  const refreshToken = cookieStore.get("refreshToken")?.value;
 
-  const { pathname } = request.nextUrl
-  const isPrivateRoute = privateRoutes.some((route) => pathname.startsWith(route));
-  const isPublicRoute = publicRoutes.includes(pathname)
+  const isPublicRoute = publicRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+  const isPrivateRoute = privateRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
 
-  if (!accessToken && refreshToken) {
-    try {
-      const cookieHeader = request.headers.get('cookie') ?? '';
-      const res = await checkServerSession(cookieHeader);
-      const setCookies = res.headers['set-cookies'];
+  let isAuthenticated = false;
+  const response = NextResponse.next();
 
-    if (setCookies) {
-      const array = Array.isArray(setCookies) ? setCookies : [setCookies]
-      const next = NextResponse.next();
-      for (const cookiesStr of array) {
-        if (!cookiesStr) continue;
-          const parsed = parse(cookiesStr)
-          const options: Parameters<typeof next.cookies.set>[2] = {
-            maxAge: Number(parsed['Max-Age']),
-            path: parsed.Path,
-            expires: parsed.Expires ? new Date(parsed.Expires) : undefined,
-          }
-          if (parsed.accessToken) {
-            next.cookies.set('accessToken', parsed.accessToken, options)
-          }
-          if (parsed.refreshToken) {
-            next.cookies.set('refreshToken', parsed.refreshToken, options)
+  if (accessToken || refreshToken) {
+    const session = await checkServerSession();
+    const setCookieHeader = session.headers["set-cookie"];
+    if (setCookieHeader) {
+      const cookiesArray = Array.isArray(setCookieHeader)
+        ? setCookieHeader
+        : [setCookieHeader];
+      cookiesArray.forEach((cookiesStr) => {
+        const [cookieName, ...rest] = cookiesStr.split("=");
+        const cookieValue = rest.join("=").split(";")[0]?.trim();
+        if (cookieName && cookieValue) {
+          response.cookies.set(cookieName.trim(), cookieValue);
         }
-        if (isPublicRoute) return NextResponse.redirect(new URL('/profile', request.url), { headers: next.headers });
-        }
-      return next;
-      }
-    }catch {
+      });
+    }
+    isAuthenticated = session.status === 200 && session.data.success === true;
+  }
+
+  if (isPrivateRoute && !isAuthenticated) {
+    if (!accessToken && !refreshToken) {
+      const responseRed = NextResponse.redirect(
+        new URL("/sign-in", request.url)
+      );
+      responseRed.cookies.delete("accessToken");
+      responseRed.cookies.delete("refreshToken");
+      return responseRed;
     }
   }
 
-  const isAuthed = Boolean(accessToken || refreshToken || request.cookies.get('accessToken')?.value);
-  if (isPrivateRoute && !isAuthed) {
-    const url = new URL('/sign-in', request.url);
-    url.searchParams.set('from', pathname);
-    return NextResponse.redirect(url);
+  if (isPublicRoute && isAuthenticated) {
+    const redirect = NextResponse.redirect(new URL("/", request.url));
+    response.cookies.getAll().forEach((cook) => {
+      redirect.cookies.set(cook);
+    });
+    return redirect;
   }
 
-  if (isPublicRoute && isAuthed) {
-    return NextResponse.redirect(new URL('/profile', request.url));
-  }
-
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
   matcher: ["/profile/:path*", "/notes/:path*", "/sign-in", "/sign-up"],
-}
+};

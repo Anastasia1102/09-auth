@@ -48,8 +48,8 @@ const Profile = async () => {
 	     </Link>
 	   </div>
      <div className={css.avatarWrapper}>
-      <Image
-        src="/avatar-min.png"
+            <Image
+              src={user.avatar}
         alt="User Avatar"
         width={120}
         height={120}

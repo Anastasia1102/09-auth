@@ -1,29 +1,52 @@
 'use client'
 
 import css from "./NotePreview.module.css"
-import { useRouter } from "next/navigation";
+import { useRouter, useParams  } from "next/navigation";
 import Modal from "@/components/Modal/Modal";
-import { Note } from "@/types/note";
+import { useQuery,  HydrationBoundary, DehydratedState, } from '@tanstack/react-query';
+import { fetchNoteById } from '@/lib/api/clientApi';
+import Loader from "@/app/loading";
 
-export default function NotePreviewClient({ note }: { note:Note }) {
+interface Props {
+ dehydratedState: DehydratedState;
+}
 
-    const router = useRouter();
-    const goBack = () => router.back();
+export default function NotePreviewClient({dehydratedState}:Props) {
 
-    const createdAtDate = note.createdAt ? new Date(note.createdAt) : null;
+  const router = useRouter();
+  const { id } = useParams<{ id: string }>();
 
-    return (
+  const goBack = () => router.back();
+
+  const { data: note, isLoading, isError } = useQuery({
+    queryKey: ['note', id],
+    queryFn: () => fetchNoteById(id),
+    enabled: typeof id === 'string' && id.length > 0,
+    refetchOnMount: false,
+  });
+    
+
+  return (
+       <HydrationBoundary state={dehydratedState}>
         <Modal onClose={goBack}>
         <div className={css.container}>
-        <div className={css.item}>
-            <div className={css.header}>
-                <h2>{note.title}</h2>
-            </div>
-            <p className={css.content}>{note.content}</p>
-             {createdAtDate && (
-            <p className={css.date}>{createdAtDate.toLocaleString()}</p>
-          )}
-            <span className={css.tag}>{note.tag}</span>
+          <div className={css.item}>
+             {isLoading && <Loader/>}
+             {isError && <p>Failed to load note.</p>}
+            
+            {note && (
+              <>
+                <div className={css.header}>
+                  <h2>{note.title}</h2>
+                </div>
+                <p className={css.content}>{note.content}</p>
+                {note.createdAt && (
+                  <p className={css.date}>{new Date(note.createdAt).toLocaleString()}</p>
+                )}
+                <span className={css.tag}>{note.tag}</span>
+              </>
+            )}
+
             <button
               type="button"
                 className={css.backBtn}
@@ -33,6 +56,7 @@ export default function NotePreviewClient({ note }: { note:Note }) {
             </button>
         </div>
             </div>
-        </Modal>);
+      </Modal>
+    </HydrationBoundary>);
 }
 
